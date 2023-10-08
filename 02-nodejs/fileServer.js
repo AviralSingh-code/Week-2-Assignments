@@ -19,7 +19,62 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const port = 3000;
 const app = express();
 
+const database =  [];
 
+function returnList(req,res)
+{
+  function callback(err,data)
+  {
+    if(err) throw err;
+    else
+    {
+      res.status(200).json(data);
+    }
+  }
+  fs.readdir(path.join(__dirname+'/files'), callback);
+}
+
+function getContent(req,res)
+{
+  var fileNameVal = req.params.filename;
+
+  console.log(fileNameVal);
+
+  function callbackFileRead(err,data)
+  {
+    if(err)
+    {
+      res.status(404).send("File not found");
+    }
+    else{
+      res.status(200).send(data);
+    }
+  }
+  fs.readFile(path.join(__dirname + '/files/' + fileNameVal), 'utf-8', callbackFileRead);
+}
+
+function errorRoute(req,res)
+{
+  res.status(404).send();
+}
+
+function started()
+{
+    console.log(`Example app listening on port ${port}`)
+}
+
+
+app.get('/files', returnList);
+app.get('/files/:filename', getContent);
+
+app.get('*', errorRoute);
+app.post('*', errorRoute);
+app.put('*', errorRoute);
+app.delete('*', errorRoute);
+
+
+// app.listen(port, started)
 module.exports = app;

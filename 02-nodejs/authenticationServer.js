@@ -30,8 +30,85 @@
  */
 
 const express = require("express")
+const bodyParser = require('body-parser');
 const PORT = 3000;
 const app = express();
+
 // write your logic here, DONT WRITE app.listen(3000) when you're running tests, the tests will automatically start the server
 
-module.exports = app;
+const database = [];
+
+app.use(bodyParser.json());
+
+var idVal = 1;
+
+app.post('/signup', (req,res) => {
+  for(let i = 0 ; i < database.length; i++)
+  {
+    if(database[i].username === req.body.username)
+    {
+      res.status(400).send("User Name Already Exists !!");
+    }
+  }
+  var obj = {
+    id: idVal,
+    username: req.body.username,
+    password: req.body.password,
+    firtsName: req.body.firstName,
+    lastName: req.body.lastName
+  };
+
+  idVal += 1;
+
+  database.push(obj);
+  res.status(201).send("Account Created Successfully !!");
+})
+
+app.post('/login', (req,res) => {
+  var usernameVal = req.body.username;
+  var passwordVal = req.body.password;
+
+  for(let i = 0 ; i < database.length; i++)
+  {
+    if(database[i].username === usernameVal && database[i].password === passwordVal)
+    {
+      res.status(200).json(database[i]);
+      break;
+    }
+  }
+  res.status(401).send("Invalid Credentials !!");
+})
+
+app.get('/data', (req, res, next) => {   //the first function is the middleware to check the route
+  var usernameVal = req.headers.username;
+  var passwordVal = req.headers.password;
+
+  console.log(usernameVal +" : "+ passwordVal);
+
+  for(let i = 0; i < database.length; i++)
+  {
+    if(database[i].username == usernameVal && database[i].password == passwordVal)
+    {
+      next();
+    }
+  }
+  res.status(401).send("Unauthorized User !!");
+},(req, res) => {
+  res.status(200).json(database);
+})
+
+function errorRoute(req,res)
+{
+  res.status(404).send();
+}
+
+app.get('*', errorRoute);
+app.post('*', errorRoute);
+app.put('*', errorRoute);
+app.delete('*', errorRoute);
+
+
+app.listen(3000, ()=>{
+  console.log("Started on 3000");
+})
+// module.exports = app;

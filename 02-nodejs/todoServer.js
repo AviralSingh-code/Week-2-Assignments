@@ -41,9 +41,135 @@
  */
 const express = require('express');
 const bodyParser = require('body-parser');
-
+const port = 3000
 const app = express();
 
+var idCounter = 0;
+
+const database = [];
+
 app.use(bodyParser.json());
+
+
+function retrieveTodo(req,res)
+{
+  res.status(200).send(database);
+}
+
+function retrieveTodoByID(req,res)
+{
+  var idTarget = req.params.id;
+  console.log(idTarget);
+  var flag = false;
+  for(let i = 0 ; i < database.length; i++)
+  {
+    if(database[i] && database[i].id == idTarget)
+    {
+      flag = true;
+      res.status(200).send(database[i]);
+    }
+  }
+  if(!flag)
+  {
+    res.status(404).send();
+  }
+}
+
+function createTodo(req,res)
+{
+  var titleVal = req.body.title;
+  var statusVal = req.body.completed;
+  var desVal = req.body.description;
+
+  var obj = {};
+  var result = {};
+
+  obj["id"] = idCounter;
+  result["id"] = idCounter;
+  obj["title"] = titleVal;
+  obj["completed"] = statusVal;
+  obj["description"] = desVal;
+
+  idCounter += 1;
+
+  database.push(obj);
+
+  res.status(201).send(result);
+}
+
+function updateTodo(req,res)
+{
+  var idTarget = req.params.id;
+  var statusVal = req.body.completed;
+
+  var flag = false;
+  for(let i = 0; i < database.length; i++)
+  {
+    if(database[i].id == idTarget)
+    {
+      flag = true;
+      database[i].completed = statusVal;
+      break;
+    }
+  }
+
+  if(!flag)
+  {
+    res.status(404).send();
+  }
+  else{
+    res.status(200).send();
+  }
+}
+
+function deleteTodo(req,res)
+{
+  var idTarget = req.params.id;
+
+  var pos = -1;
+  for(let i = 0; i < database.length; i++)
+  {
+    if(database[i].id == idTarget)
+    {
+      pos = i;
+      break;
+    }
+  }
+
+  if(pos !== -1)
+  {
+    delete database[pos];
+    res.status(200).send();
+  }
+  else
+  {
+    res.status(404).send();
+  }
+}
+
+function errorRoute(req,res)
+{
+  res.status(404).send();
+}
+
+
+function started()
+{
+    console.log(`Example app listening on port ${port}`)
+}
+
+
+app.get('/todos', retrieveTodo);
+app.get('/todos/:id', retrieveTodoByID);
+app.post('/todos', createTodo);
+app.put('/todos/:id', updateTodo);
+app.delete('/todos/:id', deleteTodo);
+
+app.get('*', errorRoute);
+app.post('*', errorRoute);
+app.put('*', errorRoute);
+app.delete('*', errorRoute);
+
+app.listen(port, started)
 
 module.exports = app;
